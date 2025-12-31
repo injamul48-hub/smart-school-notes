@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#8e44ad">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart School - Pro Features</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <style>
+        /* --- CORE STYLES --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;700&display=swap');
+        :root { --primary: #5c8ef2; --secondary: #ff7e67; --bg: #f4f7fc; --card-bg: #ffffff; --text: #2d3436; --green: #00b894; --yellow: #f1c40f; --header-h: 65px; --purple: #8e44ad; }
+        
+        body { font-family: 'Poppins', 'Noto Sans Devanagari', sans-serif; margin: 0; background: var(--bg); padding-bottom: 90px; padding-top: var(--header-h); color: var(--text); -webkit-tap-highlight-color: transparent; }
+        .hidden { display: none !important; }
+
+        /* --- HEADER & NAV --- */
+        .top-bar { position: fixed; top: 0; width: 100%; height: var(--header-h); background: var(--card-bg); color: var(--text); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.03); z-index: 1100; box-sizing: border-box; }
+        .app-title { font-size: 18px; font-weight: 700; color: #3b6cd4; display: flex; flex-direction: column; line-height: 1.2; }
+        .mode-badge { font-size: 11px; font-weight: 500; background: #e3f2fd; color: var(--primary); padding: 4px 10px; border-radius: 20px; width: fit-content; margin-top: 2px; }
+        .top-btn { background: var(--primary); border: none; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #f0f0f0; z-index: 1000; box-shadow: 0 -5px 20px rgba(0,0,0,0.03); border-radius: 20px 20px 0 0; }
+        .nav-item { text-align: center; font-size: 10px; color: #b2bec3; cursor: pointer; width: 14%; transition: 0.2s; font-weight: 500; }
+        .nav-item.active { color: var(--primary); font-weight: 700; transform: translateY(-4px); }
+        .nav-icon { font-size: 22px; display: block; margin-bottom: 3px; }
+
+        /* --- LAYOUT & CARDS --- */
+        .tab-content { display: none; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(10px);} to {opacity: 1; transform: translateY(0);} }
+        .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #f5f6fa; }
+        h2 { color: var(--text); margin: 5px 0 20px; font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+
+        /* --- SEARCH BAR UI --- */
+        .search-box {
+            display: flex; align-items: center; gap: 10px; background: #fff;
+            padding: 5px 10px; border-radius: 12px; border: 1px solid #e0e0e0;
+            margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .search-box input {
+            border: none; background: transparent; padding: 10px; margin: 0;
+            width: 100%; font-size: 14px; outline: none;
+        }
+        .search-icon { font-size: 18px; color: #aaa; }
+
+        /* --- STATS & DASHBOARD --- */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; border-radius: 18px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
+        .stat-label { font-size: 13px; font-weight: 600; color: #636e72; margin-bottom: 5px; }
+        .stat-count { font-size: 32px; font-weight: 800; line-height: 1.1; }
+        .stat-card.blue { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .stat-card.orange { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+        .stat-card.purple { background: #f3e5f5; color: #8e24aa; border: 1px solid #e1bee7; grid-column: span 2; display: flex; flex-direction: row; justify-content: space-between; padding: 15px 25px; }
+
+        /* --- PROGRESS UI (Global) --- */
+        .progress-card { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; text-align: center; padding: 30px 20px; border-radius: 24px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(108, 92, 231, 0.4); }
+        .prog-circle-outer { width: 110px; height: 110px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
+        .prog-circle-inner { width: 90px; height: 90px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6c5ce7; }
+        .prog-percent { font-size: 28px; font-weight: 800; line-height: 1; }
+        .prog-stats-row { display: flex; justify-content: space-around; margin-top: 20px; background: rgba(255,255,255,0.15); border-radius: 16px; padding: 12px; }
+        .prog-stat-val { font-size: 20px; font-weight: 700; display: block; }
+        .prog-stat-lbl { font-size: 11px; opacity: 0.9; }
+
+        /* --- SUBJECT SPECIFIC CARDS --- */
+        #subject-progress-list { display: flex; flex-direction: column; gap: 15px; padding-bottom: 20px; }
+        .sub-prog-card { background: white; border-radius: 16px; padding: 15px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: relative; border: 1px solid #f0f0f0; transition: transform 0.2s; }
+        .sub-prog-card:active { transform: scale(0.98); }
+        .sub-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .sub-name { font-size: 16px; font-weight: 700; color: #2d3436; text-transform: capitalize; }
+        .sub-percent { font-size: 18px; font-weight: 800; }
+        .prog-bar-bg { background: #dfe6e9; height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 15px; }
+        .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sub-stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .sub-stat { background: #f8f9fa; border-radius: 10px; padding: 8px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .sub-stat strong { font-size: 16px; display: block; margin-bottom: 2px; }
+        .sub-stat span { font-size: 10px; color: #636e72; font-weight: 500; text-transform: uppercase; }
+
+        /* --- UI ELEMENTS --- */
+        .routine-preview-item { display: flex; gap: 12px; padding: 12px; border-radius: 12px; background: #fff; border: 1px solid #eee; margin-bottom: 10px; align-items: center; }
+        .rp-time { font-size: 13px; font-weight: 700; color: var(--primary); background: #e3f2fd; padding: 4px 8px; border-radius: 6px; }
+        .rp-task { font-size: 14px; font-weight: 500; color: var(--text); }
+        
+        .routine-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .edit-btn { color: var(--primary); background: none; border: none; font-weight: 600; cursor: pointer; font-size: 16px; padding: 5px; }
+        .del-btn { color: var(--secondary); background: none; border: none; font-weight: 600; cursor: pointer; font-size: 16px; padding: 5px; }
+        .status-btn { border: none; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .status-btn.pending { background: #ffeaa7; color: #d35400; }
+        .status-btn.done { background: #55efc4; color: #00b894; }
+        
+        input, select { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 12px; box-sizing: border-box; font-size: 14px; background: #fafafa; transition: 0.2s; }
+        button.main-btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 15px; box-shadow: 0 4px 10px rgba(92, 142, 242, 0.4); }
+        
+        .toolbar { display: flex; gap: 5px; background: #f1f2f6; padding: 8px; border-radius: 8px; flex-wrap: wrap; margin-bottom: 10px; border: 1px solid #ddd; align-items: center; }
+        .tool-btn { min-width: 34px; height: 34px; border: 1px solid #ccc; background: white; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .tool-sep { width: 1px; height: 24px; background: #bbb; margin: 0 4px; }
+        .editor-box { border: 2px solid #b2bec3; border-radius: 8px; padding: 15px; min-height: 150px; background: #fff; color: #000; margin-bottom: 15px; outline: none; overflow-x: auto; font-size: 16px; width: 100%; display: block; box-sizing: border-box; }
+        
+        /* New Note Controls */
+        .notes-control-bar { background: #fff; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .select-all-wrap { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--primary); cursor: pointer; }
+        .select-checkbox { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
+        .download-btn { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; opacity: 0.5; pointer-events: none; transition: 0.3s; }
+        .download-btn.active { opacity: 1; pointer-events: auto; }
+        .note-card-select-wrapper { display: flex; gap: 12px; align-items: flex-start; }
+        .note-cb-container { padding-top: 5px; }
+
+        .student-card { border-left: 5px solid var(--primary); padding:15px; margin-bottom:10px; }
+        .student-card.active-profile { border-left: 5px solid var(--green); background: #f0fff4; }
+        .fab { position: fixed; bottom: 85px; right: 20px; background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 10px 25px rgba(92, 142, 242, 0.5); z-index: 2000; cursor: pointer; border: 2px solid white; transition: 0.3s; }
+        
+        /* PDF Fix */
+        #pdf-render-zone { position: absolute; top: 0; left: -9999px; width: 794px; z-index: -999; background: white; }
+        .pdf-page { width: 794px; height: 1122px; background: white; padding: 40px; border: 1px solid #ccc; font-size: 14pt; color: black; box-sizing: border-box; position: relative; overflow: hidden; margin-bottom: 20px; display: flex; flex-direction: column; }
+        .hl-green { background: #ccffcc; } .hl-red { background: #ffcccc; }
+        .dotted-line { border-bottom: 2px dotted #aaa; height: 30px; margin-top: 20px; display: block; }
+        
+        /* Exam List */
+        .exam-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-bottom: 1px solid #eee; background: white; width: 100%; box-sizing: border-box; }
+        .exam-cb { width: 22px; height: 22px; flex-shrink: 0; margin-top: 4px; cursor: pointer; }
+        .exam-content { flex: 1; min-width: 0; }
+        .exam-q { font-weight: 600; font-size: 14px; color: #2d3436; margin-bottom: 4px; }
+        .exam-a { font-size: 12px; color: #636e72; line-height: 1.4; }
+
+        /* Spelling */
+        .spell-header { text-align: center; padding: 10px; background: var(--purple); color: white; border-radius: 12px; margin-bottom: 15px; }
+        .spell-cat-box { border: 2px solid #eee; border-radius: 12px; padding: 15px; margin-bottom: 15px; background: white; }
+        .cat-title { font-size: 14px; font-weight: 700; display: block; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .cat-hard { border-left: 5px solid #e74c3c; } .title-hard { color: #c0392b; }
+        .cat-medium { border-left: 5px solid #f1c40f; } .title-medium { color: #f39c12; }
+        .word-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .word-chip { padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .chip-medium { background: #fcf3cf; color: #d35400; border: 1px solid #f9e79f; }
+        .chip-hard { background: #fadbd8; color: #c0392b; border: 1px solid #e6b0aa; }
+
+        /* RECOVERY & ALERTS */
+        #loading { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 3000; flex-direction: column; justify-content: center; align-items: center; }
+        #notification-zone { position: fixed; top: 70px; left: 0; width: 100%; z-index: 2000; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
+        .alarm-box { background: white; border-left: 5px solid var(--primary); width: 90%; max-width: 400px; padding: 15px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); pointer-events: auto; animation: slideDown 0.5s; display: flex; justify-content: space-between; align-items: center; }
+        
+        .recovery-alert {
+            background: linear-gradient(135deg, #fff3cd, #ffcccc);
+            color: #c0392b;
+            border: 2px solid #ff7e67;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            animation: blinking 1s infinite;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.2);
+        }
+        @keyframes blinking { 0%{border-color:#f1c40f; opacity:1;} 50%{border-color:#e74c3c; opacity:0.7;} 100%{border-color:#f1c40f; opacity:1;} }
+        
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; } td, th { border: 1px solid #333; padding: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="notification-zone"></div>
+    <div id="loading"><div style="font-size:50px;">&#128196;</div><p style="color:#666;">Generating PDF...</p></div>
+
+    <div class="top-bar" id="app-header">
+        <div class="app-title"><span id="app-name">Smart School</span><span id="mode-badge" class="mode-badge">Teacher Mode</span></div>
+        <button id="exit-profile-btn" class="top-btn hidden" onclick="logoutStudent()"><span>&#8617;</span> Exit</button>
+    </div>
+
+    <div id="home" class="tab-content active">
+        <div id="recovery-zone"></div>
+
+        <div id="student-progress-view" class="hidden">
+            <div class="progress-card">
+                <div class="prog-circle-outer"><div class="prog-circle-inner"><span class="prog-percent" id="sp-percent">0%</span></div></div>
+                <h3 style="margin:0; font-size:18px;" id="sp-name">Student</h3>
+                <div class="prog-stats-row">
+                    <div class="prog-stat-item"><span class="prog-stat-val" id="sp-total">0</span><span class="prog-stat-lbl">📘 Total</span></div>
+                    <div class="prog-stat-item"><span class="prog-stat-val" id="sp-complete">0</span><span class="prog-stat-lbl">✅ Done</span></div>
+                    <div class="prog-stat-item"><span class="prog-stat-val" id="sp-pending">0</span><span class="prog-stat-lbl">⏳ Pending</span></div>
+                </div>
+            </div>
+            <div class="section-header"><div class="section-title">⏰ Upcoming Tasks</div></div>
+            <div id="student-upcoming-tasks"></div>
+            <div class="section-header" style="margin-top:20px;"><div class="section-title">📊 Subject Progress</div></div>
+            <div id="subject-progress-list"></div>
+        </div>
+
+        <div id="teacher-dash-view">
+            <div class="welcome-section">
+                <h1 class="welcome-title">Hello, Teacher! 👋</h1>
+                <span class="welcome-sub">Here is what's happening today.</span>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card blue"><span class="stat-label">Total Notes</span><span class="stat-count" id="d-total">0</span></div>
+                <div class="stat-card orange"><span class="stat-label">Students</span><span class="stat-count" id="d-students">0</span></div>
+                <div class="stat-card purple"><span class="stat-label">📝 Pending Notes</span><span class="stat-count" id="d-pending">0</span></div>
+            </div>
+            <div class="section-header"><div class="section-title">📅 Today's Routine</div></div>
+            <div id="d-today-routine"><div style="text-align:center; color:#999; font-size:13px; padding:20px;">No routine set for today.</div></div>
+        </div>
+    </div>
+
+    <div id="students" class="tab-content">
+        <h2>&#128104;&#8205;&#127891; Students</h2>
+        <details class="card" style="padding: 10px 15px;"><summary style="font-weight:600; cursor:pointer; color:var(--primary);">+ Register New Student</summary><div style="margin-top: 15px;"><input type="text" id="st-name" placeholder="Name"><div style="display:flex; gap:10px;"><input type="text" id="st-class" placeholder="Class (1-5)"><input type="text" id="st-roll" placeholder="Roll No"></div><input type="tel" id="st-mob" placeholder="Mobile"><input type="date" id="st-date"><input type="text" id="st-addr" placeholder="Address"><button class="main-btn" onclick="addStudent()">Save Student</button></div></details>
+        <div id="students-list"></div>
+    </div>
+
+    <div id="subjects" class="tab-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h2>&#128218; Notes Repository</h2><button onclick="addSubjectMain()" style="background:#dfe6e9; border:none; border-radius:8px; padding:8px 12px; font-size:12px; font-weight:600;">+ New Subject</button></div>
+        <div class="card" style="padding:10px;">
+            <select id="sub-sel" onchange="renderNotes()" style="margin:0; border:none; background:transparent; font-weight:bold; font-size:16px; color:var(--primary); width:100%;"><option value="">Select Subject...</option></select>
+        </div>
+        
+        <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="note-search" placeholder="Search notes..." onkeyup="filterNotes()">
+        </div>
+
+        <div id="notes-controls" class="notes-control-bar hidden">
+            <label class="select-all-wrap"><input type="checkbox" id="note-select-all" class="select-checkbox" onchange="toggleNoteSelection(this)"> Select All</label>
+            <button id="note-download-btn" class="download-btn" onclick="downloadSelectedNotesPDF()">&#128196; Download PDF (<span id="note-sel-count">0</span>)</button>
+        </div>
+
+        <div id="notes-list"></div>
+        <div class="fab" onclick="openModal()">+</div>
+    </div>
+
+    <div id="routine" class="tab-content"><h2>&#9200; Routine Manager</h2><div class="card"><h4 style="margin-top:0;" id="routine-form-title">Add New Task</h4><div style="display:flex; gap:5px;"><select id="r-day"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option></select><input type="time" id="r-time"></div><input id="r-task" placeholder="Task"><input type="hidden" id="r-edit-id"><button class="main-btn" onclick="saveRoutine()" id="r-save-btn">Add to Routine</button><button class="secondary-btn hidden" onclick="cancelRoutineEdit()" id="r-cancel-btn" style="background:#ccc; margin-top:5px; width:100%; border:none; padding:10px; border-radius:10px;">Cancel</button></div><div id="routine-list"></div></div>
+    <div id="exam" class="tab-content"><h2>&#128221; Exam Master</h2><div class="card" style="background:#eef2f3; padding:15px;"><select id="exam-sub-sel" onchange="renderExamInterface()"><option value="">-- Subject --</option></select><select id="exam-cat-sel" onchange="renderExamInterface()"><option value="UT1">Unit Test 1</option><option value="UT2">Unit Test 2</option><option value="HALF">Half Yearly</option><option value="ANNUAL">Annual</option></select></div><div id="exam-interface" class="hidden"><div class="card" style="padding:0;"><div style="padding:10px; border-bottom:1px solid #eee;"><label><input type="checkbox" onchange="toggleSelectAll(this)"> Select All</label> <span id="sel-count">0</span></div><div id="exam-notes-list" style="max-height:300px; overflow-y:auto;"></div><div style="padding:15px; background:#f9f9f9;"><button class="main-btn" onclick="assignNotesToExam()">Assign</button><button class="main-btn" style="margin-top:5px; background:#00b894;" onclick="generateExamPDF()">PDF</button></div></div></div></div>
+    <div id="spelling" class="tab-content"><h2>&#128292; Spelling Intelligence</h2><div id="spell-teacher-view"><div class="card" style="text-align:center; padding:30px; color:#666;"><p>&#128104;&#8205;&#127979; Teacher Mode</p><p style="font-size:12px;">Spelling lists generated automatically.</p><button class="main-btn" style="width:auto; margin-top:10px;" onclick="tab('students', document.querySelector('.nav-item:nth-child(2)'))">Go to Students</button></div></div><div id="spell-student-view" class="hidden"><div class="spell-header"><h3 style="margin:0;" id="st-spell-name">Student</h3></div><div class="card" style="padding:10px;"><select id="spell-sub-sel" onchange="renderStudentSpelling()" style="margin:0; border:2px solid var(--purple);"><option value="">Select Subject...</option></select></div><div id="spell-words-container"></div></div></div>
+
+    <div id="settings" class="tab-content">
+        <h2>&#9881; Settings</h2>
+        <div class="card"><div style="display:flex; justify-content:space-between; padding:10px 0;"><span>Auto Save</span> <input type="checkbox" id="sw-autosave" onchange="toggleSetting('autosave', this.checked)" style="width:auto;"></div><hr style="border:0; border-top:1px solid #eee;"><p>Voice Alarm: <span id="alarm-status" style="color:red;">OFF</span> <button onclick="enableAudioSystem()" style="float:right; font-size:10px;">Enable</button></p></div>
+        <div class="card"><button class="main-btn" onclick="backupData()" style="background:#636e72; margin-bottom:5px;">Backup Data</button><input type="file" id="restore-file"><button class="main-btn" onclick="restoreData()" style="background:var(--secondary); margin-top:5px;">Restore</button></div>
+        <div class="card"><button class="main-btn" onclick="openResetModal()" style="background:#e74c3c; margin-top:15px;">⚠️ Reset Data</button></div>
+    </div>
+
+    <div id="reset-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2100; display:flex; justify-content:center; align-items:center;">
+        <div style="background:white; width:90%; max-width:350px; border-radius:15px; padding:20px; text-align:center;">
+            <h3 style="margin-top:0; color:#c0392b;">Reset Options</h3>
+            <p style="font-size:13px; color:#666;">Choose what you want to delete.</p>
+            <button class="main-btn" onclick="confirmClearAll()" style="background:#c0392b; margin-bottom:10px;">1️⃣ Clear All Data</button>
+            <button class="main-btn" onclick="confirmClearCurrent()" style="background:#e67e22; margin-bottom:10px;">2️⃣ Clear Selected Student</button>
+            <button onclick="closeResetModal()" style="background:none; border:none; color:#666; margin-top:10px; cursor:pointer; font-weight:600;">Cancel</button>
+        </div>
+    </div>
+
+    <div id="modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:2000; display:flex; justify-content:center; align-items:end;">
+        <div style="background:white; width:100%; max-width:600px; border-radius:20px 20px 0 0; padding:20px; max-height:90vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><h3 style="margin:0;">Editor</h3><button onclick="closeModal()" style="border:none; background:none; font-size:24px;">&times;</button></div>
+            <label style="font-size:12px; font-weight:bold;">Assign To:</label><select id="note-target" style="border: 2px solid var(--primary); background: #f0f8ff;"></select>
+            <label style="font-size:12px; font-weight:bold;">Subject & Q:</label><select id="m-sub" style="margin-bottom:10px;"></select><input id="m-q" placeholder="Question">
+            <div class="toolbar"><button class="tool-btn" onclick="applyFmt('undo')">↩</button><button class="tool-btn" onclick="applyFmt('redo')">↪</button><div class="tool-sep"></div><button class="tool-btn" onclick="applyFmt('bold')"><b>B</b></button><button class="tool-btn" onclick="applyFmt('underline')"><u>U</u></button><input type="color" onchange="applyFmt('foreColor', this.value)" style="width:30px; padding:0;"><div class="tool-sep"></div><button class="tool-btn" onclick="applyHl('hl-green')" style="background:#ccffcc;">H</button><button class="tool-btn" onclick="applyHl('hl-red')" style="background:#ffcccc;">H</button><div class="tool-sep"></div><button class="tool-btn" onclick="askInsertTable()">📅</button><button class="tool-btn" onclick="addRow()">+R</button><button class="tool-btn" onclick="addCol()">+C</button><button class="tool-btn" onclick="setTableColor('black')" style="background:black; color:white;">B</button><button class="tool-btn" onclick="setTableColor('white')">W</button></div>
+            <div id="m-a" class="editor-box" contenteditable="true"></div>
+            <input type="file" id="m-img" accept="image/*" style="font-size:12px;"><input type="hidden" id="edit-id">
+            <button class="main-btn" onclick="saveNote()" style="margin-top:10px;">Save Note &#10004;</button>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="tab('home', this)"><span class="nav-icon">&#127968;</span>Home</div>
+        <div class="nav-item" onclick="tab('students', this)"><span class="nav-icon">&#128104;</span>Student</div>
+        <div class="nav-item" onclick="tab('subjects', this)"><span class="nav-icon">&#128218;</span>Notes</div>
+        <div class="nav-item" onclick="tab('spelling', this)"><span class="nav-icon">&#128292;</span>Spell</div>
+        <div class="nav-item" onclick="tab('exam', this)"><span class="nav-icon">&#128221;</span>Exam</div>
+        <div class="nav-item" onclick="tab('routine', this)"><span class="nav-icon">&#9200;</span>Time</div>
+        <div class="nav-item" onclick="tab('settings', this)"><span class="nav-icon">&#9881;</span>Set</div>
+    </div>
+    <div id="pdf-render-zone"></div>
+
+    <script>
+        let app = { subjects: {}, routine: {}, students: [], settings: { autosave: false } };
+        let currentStudentId = null; 
+        const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+        let voiceEnabled = false;
+
+        function getData() {
+            if (currentStudentId) {
+                let st = app.students.find(s => s.id === currentStudentId);
+                if (st && !st.data) st.data = { subjects: {}, routine: {}, spelling: {} };
+                if (st) return st.data;
+            }
+            return app;
+        }
+
+        window.onload = () => {
+            if(localStorage.getItem('SmartSchool_Pro_Max_Fixed')) {
+                try {
+                    let saved = JSON.parse(localStorage.getItem('SmartSchool_Pro_Max_Fixed'));
+                    app = { ...app, ...saved };
+                    if(!app.students || !Array.isArray(app.students)) app.students = [];
+                } catch(e) { console.error("Load Error", e); }
+            }
+            let lastUser = sessionStorage.getItem('lastStudentId');
+            if(lastUser) loginStudent(parseInt(lastUser), false);
+            
+            renderStudents(); 
+            updateUIContext();
+            renderSelects(); 
+            setInterval(checkSmartAlarms, 2000); 
+        };
+        const saveData = () => { localStorage.setItem('SmartSchool_Pro_Max_Fixed', JSON.stringify(app)); updateDashboard(); };
+
+        // --- CONTEXT SWITCHING ---
+        function updateUIContext() {
+            let header = document.getElementById('app-header');
+            let badge = document.getElementById('mode-badge');
+            let exitBtn = document.getElementById('exit-profile-btn');
+            let stView = document.getElementById('student-progress-view');
+            let tView = document.getElementById('teacher-dash-view');
+            let spellT = document.getElementById('spell-teacher-view');
+            let spellS = document.getElementById('spell-student-view');
+
+            if (currentStudentId) {
+                let st = app.students.find(s => s.id === currentStudentId);
+                if(st) {
+                    if (!st.data) st.data = { subjects: {}, routine: {}, spelling: {} };
+                    header.style.background = 'var(--green)'; badge.innerText = st.name;
+                    exitBtn.classList.remove('hidden');
+                    stView.classList.remove('hidden'); tView.classList.add('hidden');
+                    spellT.classList.add('hidden'); spellS.classList.remove('hidden');
+                    document.getElementById('st-spell-name').innerText = st.name;
+                    renderSpellingDropdown(st);
+                } else { logoutStudent(); return; }
+            } else {
+                header.style.background = 'var(--card-bg)'; badge.innerText = "Teacher Mode";
+                exitBtn.classList.add('hidden');
+                stView.classList.add('hidden'); tView.classList.remove('hidden');
+                spellT.classList.remove('hidden'); spellS.classList.add('hidden');
+            }
+            document.getElementById('notes-list').innerHTML = '';
+            renderSelects();
+        }
+
+        function loginStudent(id) { currentStudentId = id; sessionStorage.setItem('lastStudentId', id); updateUIContext(); tab('home', document.querySelector('.nav-item')); }
+        function logoutStudent() { currentStudentId = null; sessionStorage.removeItem('lastStudentId'); updateUIContext(); tab('home', document.querySelector('.nav-item')); }
+        function tab(id, el) { 
+            document.querySelectorAll('.tab-content').forEach(d => d.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(el) el.classList.add('active');
+            else document.querySelector(`.nav-item[onclick*="'${id}'"]`)?.classList.add('active');
+            if(id==='home') updateDashboard(); 
+            if(id==='subjects') { renderSelects(); let s = document.getElementById('sub-sel').value; if(s) renderNotes(); }
+            if(id==='exam') renderSelects();
+            if(id==='routine') renderRoutine();
+            if(id==='spelling' && currentStudentId) renderStudentSpelling();
+        }
+
+        // --- DASHBOARD ---
+        function updateDashboard() {
+            let ctx = getData(); let total = 0; for(let sub in ctx.subjects) total += ctx.subjects[sub].length;
+            document.getElementById('d-total').innerText = total; document.getElementById('d-students').innerText = app.students ? app.students.length : 0;
+            let pending = 0; for(let sub in ctx.subjects) pending += ctx.subjects[sub].filter(n => !n.done).length;
+            document.getElementById('d-pending').innerText = pending;
+            let dName = days[new Date().getDay()];
+            let routineList = document.getElementById('d-today-routine');
+            routineList.innerHTML = '';
+            if(ctx.routine && ctx.routine[dName] && ctx.routine[dName].length > 0) {
+                ctx.routine[dName].forEach(r => { routineList.innerHTML += `<div class="routine-preview-item"><span class="rp-time">${r.time}</span><span class="rp-task">${r.task}</span></div>`; });
+            } else { routineList.innerHTML = '<div style="text-align:center; color:#999; font-size:13px; padding:20px;">No routine set for today.</div>'; }
+            if(currentStudentId) { let st = app.students.find(s => s.id === currentStudentId); updateStudentProgress(st); renderStudentUpcomingTasks(st); }
+        }
+
+        function updateStudentProgress(st) {
+            document.getElementById('sp-name').innerText = st.name;
+            let data = st.data || { subjects: {} };
+            let grandTotal = 0, grandDone = 0;
+            let subListHtml = '';
+            for(let s in data.subjects) {
+                let notes = data.subjects[s]; let total = notes.length; let done = notes.filter(n => n.done).length; let pending = total - done; let pct = total === 0 ? 0 : Math.round((done/total)*100);
+                grandTotal += total; grandDone += done;
+                
+                // --- NEW CARD DESIGN LOGIC ---
+                let barColor = pct === 100 ? '#00b894' : pct > 50 ? '#0984e3' : '#fdcb6e'; // Green, Blue, Yellow/Orange
+                let cardBorder = pct === 100 ? '5px solid #00b894' : '5px solid #dfe6e9';
+
+                subListHtml += `
+                <div class="sub-prog-card" style="border-left:${cardBorder}">
+                    <div class="sub-title-row">
+                        <span class="sub-name">${s}</span>
+                        <span class="sub-percent" style="color:${barColor}">${pct}%</span>
+                    </div>
+                    <div class="prog-bar-bg">
+                        <div class="prog-bar-fill" style="width:${pct}%; background:${barColor}"></div>
+                    </div>
+                    <div class="sub-stats-grid">
+                        <div class="sub-stat"><strong style="color:#2d3436">📘 ${total}</strong><span>Total</span></div>
+                        <div class="sub-stat"><strong style="color:#00b894">✅ ${done}</strong><span>Done</span></div>
+                        <div class="sub-stat"><strong style="color:#d63031">⏳ ${pending}</strong><span>Pending</span></div>
+                    </div>
+                </div>`;
+            }
+            if(subListHtml === '') subListHtml = '<p style="text-align:center;color:#999;font-size:12px;">No subjects assigned yet.</p>';
+            document.getElementById('subject-progress-list').innerHTML = subListHtml;
+            let grandPending = grandTotal - grandDone; let grandPct = grandTotal === 0 ? 0 : Math.round((grandDone/grandTotal)*100);
+            document.getElementById('sp-total').innerText = grandTotal; document.getElementById('sp-complete').innerText = grandDone; document.getElementById('sp-pending').innerText = grandPending; document.getElementById('sp-percent').innerText = grandPct + "%";
+        }
+
+        function deleteStudent(id) { if(confirm("Delete student?")) { if(currentStudentId === id) logoutStudent(); app.students = app.students.filter(s => s.id !== id); saveData(); renderStudents(); updateDashboard(); } }
+        function renderStudents() { let l=document.getElementById('students-list'); l.innerHTML=''; app.students.sort((a,b)=>a.name.localeCompare(b.name)).forEach(s=>{ let act=currentStudentId===s.id; l.innerHTML+=`<div class="card student-card ${act?'active-profile':''}"><div style="display:flex;justify-content:space-between;align-items:center;"><b>${s.name}</b><button onclick="deleteStudent(${s.id})" class="del-btn">🗑</button></div><div style="font-size:12px;color:#666;">Class: ${s.class} | Roll: ${s.roll}</div><button class="main-btn" style="margin-top:10px;padding:10px;background:${act?'var(--green)':'var(--primary)'}" onclick="loginStudent(${s.id})">${act?'Active':'Open Profile'}</button></div>`; }); }
+
+        // --- RESET LOGIC ---
+        function openResetModal() { document.getElementById('reset-modal').classList.remove('hidden'); }
+        function closeResetModal() { document.getElementById('reset-modal').classList.add('hidden'); }
+        function confirmClearAll() {
+            if(confirm("⚠️ ARE YOU SURE?\n\nThis will delete ALL students and ALL notes permanently.")) {
+                app = { subjects: {}, routine: {}, students: [], settings: { autosave: false } };
+                logoutStudent(); saveData(); alert("All data has been wiped."); closeResetModal(); location.reload(); 
+            }
+        }
+        function confirmClearCurrent() {
+            if(!currentStudentId) { alert("No student selected."); return; }
+            if(confirm("⚠️ Delete CURRENT Student?\n\nThis will remove the active profile.")) {
+                deleteStudent(currentStudentId); closeResetModal();
+            }
+        }
+
+        // --- SPELLING AI ---
+        function analyzeSpellingDifficulty(text, gradeLevel) {
+            if(!text) return { medium:[], hard:[] };
+            let cleanText = text.replace(/<[^>]*>/g, ' ').replace(/[^\w\s\u0900-\u097F\u0980-\u09FF]/gi, '');
+            let words = cleanText.split(/\s+/);
+            let medium = new Set();
+            let hard = new Set();
+            let base = 3 + (parseInt(gradeLevel) || 1); 
+            words.forEach(w => {
+                if (w.length < 2) return;
+                let word = w.toLowerCase();
+                let isEng = /^[a-zA-Z]+$/.test(word);
+                let isIndic = /[\u0900-\u09FF]/.test(word); 
+                if (isEng) { if (word.length > base + 3) hard.add(w); else if (word.length > base) medium.add(w); } 
+                else if (isIndic) { if (word.length > base + 1) hard.add(w); else if (word.length > base - 1) medium.add(w); }
+            });
+            return { medium: [...medium], hard: [...hard] };
+        }
+        function refreshStudentSpelling(studentObj) {
+            let grade = parseInt(studentObj.class.replace(/\D/g, '')) || 1;
+            studentObj.data.spelling = {}; // Clear old
+            for (let subKey in studentObj.data.subjects) {
+                let allText = "";
+                studentObj.data.subjects[subKey].forEach(n => { allText += " " + n.q + " " + n.a; });
+                if (allText.trim() !== "") {
+                    let results = analyzeSpellingDifficulty(allText, grade);
+                    if (results.medium.length > 0 || results.hard.length > 0) { studentObj.data.spelling[subKey] = results; }
+                }
+            }
+        }
+
+        function saveNote() {
+            let tid = document.getElementById('note-target').value; let s = document.getElementById('m-sub').value; let q = document.getElementById('m-q').value; let a = document.getElementById('m-a').innerHTML; let id = document.getElementById('edit-id').value;
+            if(!s || !q) return alert("Select Subject!");
+            
+            // Context Logic
+            let targetCtx; let studentObj = null;
+            if (tid === 'g') { targetCtx = app; } else { studentObj = app.students.find(x => x.id == tid); if (!studentObj.data) studentObj.data = { subjects: {}, routine: {}, spelling: {} }; targetCtx = studentObj.data; }
+            if (!targetCtx.subjects[s]) targetCtx.subjects[s] = [];
+            
+            // DUPLICATE CHECK (Q or A)
+            let isDup = targetCtx.subjects[s].some(n => {
+                if(id && n.id == id) return false; // Ignore self if editing
+                // Check if Question matches OR Answer matches (ignoring whitespace)
+                return (n.q.trim() === q.trim()) || (n.a.trim() === a.trim() && a.trim() !== "");
+            });
+
+            if (isDup) {
+                // Confirmation Popup
+                if (!confirm("⚠️ Duplicate Detected!\n\nयह Question/Answer पहले से मौजूद है। क्या आप फिर भी इसे Add करना चाहते हैं?")) {
+                    return; // Stop if User clicks Cancel (No)
+                }
+            }
+
+            if (id && (tid == (currentStudentId || 'g'))) { let n = targetCtx.subjects[s].find(x => x.id == id); if(n){ n.q = q; n.a = a; } } 
+            else { targetCtx.subjects[s].push({ id: Date.now(), q, a, exams: [], done: false }); }
+            if (studentObj) { refreshStudentSpelling(studentObj); }
+            saveData(); closeModal(); if (tid == (currentStudentId || 'g')) renderNotes(); else alert("Saved!");
+        }
+
+        // --- UTILS ---
+        function renderSpellingDropdown(st) { let sel = document.getElementById('spell-sub-sel'); let subjects = st.data.subjects || {}; let opts = '<option value="">Select Subject...</option>'; for (let s in subjects) { opts += `<option value="${s}">${s}</option>`; } sel.innerHTML = opts; document.getElementById('spell-words-container').innerHTML = ''; }
+        function renderStudentSpelling() { let sub = document.getElementById('spell-sub-sel').value; let div = document.getElementById('spell-words-container'); div.innerHTML = ''; if (!currentStudentId || !sub) return; let st = app.students.find(s => s.id === currentStudentId); let spellData = st.data.spelling || {}; let data = spellData[sub] ? spellData[sub] : { medium:[], hard:[] }; if (data.medium && data.medium.length > 0) { div.innerHTML += `<div class="spell-cat-box cat-medium"><span class="cat-title title-medium">🟡 Medium Words</span><div class="word-chips">${data.medium.map(w => `<span class="word-chip chip-medium">${w}</span>`).join('')}</div></div>`; } if (data.hard && data.hard.length > 0) { div.innerHTML += `<div class="spell-cat-box cat-hard"><span class="cat-title title-hard">🔴 Hard Words</span><div class="word-chips">${data.hard.map(w => `<span class="word-chip chip-hard">${w}</span>`).join('')}</div></div>`; } if (div.innerHTML === '') div.innerHTML = '<p style="text-align:center; color:#999;">No words found.</p>'; }
+        function renderSelects() { let ctx = getData(); let h = '<option value="">Select Subject...</option>'; for (let s in ctx.subjects) { h += `<option value="${s}">${s}</option>`; } ['sub-sel', 'm-sub', 'exam-sub-sel', 'spell-sub-sel'].forEach(id => { let el = document.getElementById(id); if (el) { let v = el.value; el.innerHTML = h; if (v && ctx.subjects[v]) el.value = v; } }); }
+        function openModal(id,s) { document.getElementById('modal').classList.remove('hidden'); let t=document.getElementById('note-target'); t.innerHTML=`<option value="g">Global</option>`+app.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join(''); t.value=currentStudentId||"g"; t.disabled=!!currentStudentId; renderSelects(); document.getElementById('edit-id').value=id||''; let currentSub = document.getElementById('sub-sel').value; if(id&&s) { let ctx=getData(); let n=ctx.subjects[s].find(x=>x.id==id); document.getElementById('m-sub').value=s; document.getElementById('m-sub').disabled=true; if(n) { document.getElementById('m-q').value=n.q; document.getElementById('m-a').innerHTML=n.a || ''; } } else { document.getElementById('m-sub').disabled=false; if(currentSub) document.getElementById('m-sub').value = currentSub; document.getElementById('m-q').value=''; document.getElementById('m-a').innerHTML=''; } }
+        function closeModal(){document.getElementById('modal').classList.add('hidden');}
+        function selectWord(){ let s=window.getSelection(); if(s.isCollapsed && s.modify){s.modify("move","backward","word");s.modify("extend","forward","word");} }
+        function applyFmt(c,v){ selectWord(); document.execCommand(c,false,v); }
+        function applyHl(cl){ selectWord(); let s=window.getSelection(); if(!s.isCollapsed){let sp=document.createElement('span');sp.className=cl; try{s.getRangeAt(0).surroundContents(sp);}catch(e){}} }
+        const getTbl=()=>{let s=window.getSelection().anchorNode;return s.nodeType===1?s.closest('table'):s.parentElement.closest('table');}
+        function askInsertTable(){document.execCommand('insertHTML',false,'<table border="1" style="width:100%; border:1px solid black;"><tr><td>.</td><td>.</td></tr><tr><td>.</td><td>.</td></tr></table>');}
+        function addRow(){let t=getTbl();if(t){let r=t.insertRow(-1);for(let i=0;i<t.rows[0].cells.length;i++)r.insertCell(i).innerHTML=".";}}
+        function addCol(){let t=getTbl();if(t){for(let i=0;i<t.rows.length;i++)t.rows[i].insertCell(-1).innerHTML=".";}}
+        function setTableColor(c){let t=getTbl();if(t){t.style.border=`1px solid ${c}`;t.querySelectorAll('td,th').forEach(x=>x.style.border=`1px solid ${c}`)}}
+        function addStudent() { let n=document.getElementById('st-name').value; if(!n)return alert("Name req"); app.students.push({id:Date.now(),name:n,class:document.getElementById('st-class').value,roll:document.getElementById('st-roll').value,mobile:document.getElementById('st-mob').value,date:document.getElementById('st-date').value,address:document.getElementById('st-addr').value,data:{subjects:{},routine:{}}}); saveData(); renderStudents(); alert("Added!"); }
+        function addSubjectMain() { let n=prompt("Name:"); if(n){ let ctx=getData(); if(!ctx.subjects[n]) ctx.subjects[n]=[]; saveData(); renderSelects(); let el = document.getElementById('sub-sel'); if(el) { el.value = n; renderNotes(); } } }
+        function delNote(id,s){ if(confirm("Del?")){ let ctx=getData(); ctx.subjects[s]=ctx.subjects[s].filter(x=>x.id!==id); saveData(); renderNotes(); } }
+        function toggleSetting(k,v){app.settings[k]=v;saveData();}
+        function backupData(){let a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(app));a.download="Backup.json";a.click();}
+        function restoreData() { let f=document.getElementById('restore-file').files[0]; if(f) { let r=new FileReader(); r.onload=e=>{ try { app=JSON.parse(e.target.result); saveData(); alert("Success!"); location.reload(); } catch(err) { alert("Error!"); } }; r.readAsText(f); } else { alert("Select file."); } }
+        
+        // --- NOTE SELECTION & SEARCH ---
+        function filterNotes() {
+            let term = document.getElementById('note-search').value.toLowerCase();
+            let cards = document.querySelectorAll('#notes-list .card');
+            cards.forEach(c => {
+                let text = c.innerText.toLowerCase();
+                c.style.display = text.includes(term) ? 'block' : 'none';
+            });
+        }
+
+        function renderNotes() { 
+            let ctx = getData(); let s = document.getElementById('sub-sel').value; 
+            let list = document.getElementById('notes-list'); list.innerHTML = ''; 
+            document.getElementById('notes-controls').classList.add('hidden');
+            if (!s || !ctx.subjects[s] || ctx.subjects[s].length === 0) { list.innerHTML = '<p style="text-align:center;color:#999;margin-top:20px">No notes found.</p>'; return; }
+            document.getElementById('notes-controls').classList.remove('hidden'); document.getElementById('note-select-all').checked = false; document.getElementById('note-download-btn').classList.remove('active'); document.getElementById('note-sel-count').innerText = '0';
+            ctx.subjects[s].forEach((n,i)=> { 
+                let statusHtml = n.done ? `<button class="status-btn done" onclick="toggleNoteStatus('${s}', ${n.id})">✔ Complete</button>` : `<button class="status-btn pending" onclick="toggleNoteStatus('${s}', ${n.id})">⏳ Pending</button>`; 
+                let actions = `<button onclick="openModal(${n.id},'${s}')" class="edit-btn">✎</button>`; 
+                list.innerHTML += `<div class="card" style="padding:15px; margin-bottom:10px;"><div class="note-card-select-wrapper"><div class="note-cb-container"><input type="checkbox" class="select-checkbox note-sel-cb" value="${n.id}" onchange="updateNoteSelectionUI()"></div><div style="flex:1;"><div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><b style="color:var(--primary);">Q${i+1}: ${n.q}</b><button onclick="delNote(${n.id},'${s}')" class="del-btn">✖</button></div><div style="font-size:14px;color:#444; margin-bottom:15px;">${n.a}</div><div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:10px;">${statusHtml}${actions}</div></div></div></div>`; 
+            }); 
+        }
+
+        function toggleNoteStatus(sub, id) { let ctx = getData(); let note = ctx.subjects[sub].find(n => n.id === id); if(note) { note.done = !note.done; saveData(); renderNotes(); if(currentStudentId) updateUIContext(); } }
+        function toggleNoteSelection(master) { document.querySelectorAll('.note-sel-cb').forEach(cb => cb.checked = master.checked); updateNoteSelectionUI(); }
+        function updateNoteSelectionUI() { let count = document.querySelectorAll('.note-sel-cb:checked').length; document.getElementById('note-sel-count').innerText = count; let btn = document.getElementById('note-download-btn'); if(count > 0) btn.classList.add('active'); else btn.classList.remove('active'); }
+
+        async function downloadSelectedNotesPDF() {
+            let sub = document.getElementById('sub-sel').value;
+            let checkedBoxes = document.querySelectorAll('.note-sel-cb:checked');
+            if(checkedBoxes.length === 0) return;
+            let ids = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+            let ctx = getData();
+            let selectedNotes = ctx.subjects[sub].filter(n => ids.includes(n.id));
+            document.getElementById('loading').style.display='flex';
+            let z = document.getElementById('pdf-render-zone'); z.innerHTML=''; z.style.visibility='visible'; z.style.zIndex='9999';
+            let currentPage = document.createElement('div'); currentPage.className = 'pdf-page';
+            let headerName = currentStudentId ? app.students.find(s=>s.id===currentStudentId).name : "Smart School";
+            currentPage.innerHTML = `<h2 style="text-align:center;border-bottom:2px solid #333;margin-bottom:20px;">${headerName} - ${sub} (Notes)</h2>`;
+            z.appendChild(currentPage);
+            selectedNotes.forEach((n, idx) => {
+                let box = document.createElement('div'); box.style.marginBottom = '20px';
+                box.innerHTML = `<div><b>Q${idx+1}: ${n.q}</b><div style="margin-top:5px;">${n.a}</div></div><div class="dotted-line"></div>`;
+                currentPage.appendChild(box);
+                if (currentPage.scrollHeight > 1122) { currentPage.removeChild(box); currentPage = document.createElement('div'); currentPage.className = 'pdf-page'; currentPage.innerHTML = `<div style="margin-bottom:20px; font-size:10px; color:#999;">${sub} (Cont...)</div>`; z.appendChild(currentPage); currentPage.appendChild(box); }
+            });
+            await new Promise(r=>setTimeout(r,1000));
+            const {jsPDF}=window.jspdf; const doc=new jsPDF('p','pt','a4'); let pgs=z.querySelectorAll('.pdf-page');
+            for(let i=0; i<pgs.length; i++){ let c=await html2canvas(pgs[i],{scale:2}); if(i>0) doc.addPage(); doc.addImage(c.toDataURL('image/jpeg',0.9),'JPG',0,0,595,(c.height*595)/c.width); }
+            doc.save(`${sub}_Notes.pdf`); z.innerHTML=''; z.style.zIndex='-999'; document.getElementById('loading').style.display='none';
+        }
+
+        function renderExamInterface() { let sub=document.getElementById('exam-sub-sel').value; let cat=document.getElementById('exam-cat-sel').value; let div=document.getElementById('exam-interface'); if(!sub) { div.classList.add('hidden'); return; } div.classList.remove('hidden'); let ctx=getData(); let notes=ctx.subjects[sub] || []; let list=document.getElementById('exam-notes-list'); list.innerHTML=''; if(!notes.length) { list.innerHTML='<p style="padding:10px;text-align:center;color:#999">No notes.</p>'; return; } notes.forEach(n=>{ let badge=(n.exams&&n.exams.includes(cat))?'<span style="font-size:10px;padding:2px 4px;border-radius:4px;color:white;background:var(--green);margin-left:5px;">Added</span>':''; list.innerHTML+=`<div class="exam-item"><input type="checkbox" class="exam-cb" value="${n.id}"><div class="exam-content"><div class="exam-q">${n.q} ${badge}</div><div class="exam-a">${n.a}</div></div></div>`; }); updateSelCount(); }
+        function toggleSelectAll(el){document.querySelectorAll('.exam-cb').forEach(c=>c.checked=el.checked);updateSelCount();}
+        document.getElementById('exam-interface').addEventListener('change',e=>{if(e.target.classList.contains('exam-cb'))updateSelCount();});
+        function updateSelCount(){document.getElementById('sel-count').innerText=`${document.querySelectorAll('.exam-cb:checked').length} Selected`;}
+        function assignNotesToExam(){let sub=document.getElementById('exam-sub-sel').value;let cat=document.getElementById('exam-cat-sel').value;let ids=Array.from(document.querySelectorAll('.exam-cb:checked')).map(c=>parseInt(c.value));if(!ids.length)return alert("Select notes!");let ctx=getData();let ch=false;ctx.subjects[sub].forEach(n=>{if(ids.includes(n.id)){if(!n.exams)n.exams=[];if(!n.exams.includes(cat)){n.exams.push(cat);ch=true;}}});if(ch){saveData();renderExamInterface();alert("Assigned!");}else alert("Already assigned.");}
+        
+        async function generateExamPDF() {
+            let sub = document.getElementById('exam-sub-sel').value; let cat = document.getElementById('exam-cat-sel').value; let ctx = getData(); let notes = (ctx.subjects[sub] || []).filter(n => n.exams && n.exams.includes(cat));
+            if (!notes.length) return alert("No notes found!"); document.getElementById('loading').style.display = 'flex';
+            let z = document.getElementById('pdf-render-zone'); z.innerHTML = ''; z.style.visibility = 'visible'; z.style.zIndex = '9999';
+            let currentPage = document.createElement('div'); currentPage.className = 'pdf-page';
+            let headerName = currentStudentId ? app.students.find(s=>s.id===currentStudentId).name : "Smart School";
+            currentPage.innerHTML = `<h2 style="text-align:center;border-bottom:2px solid #333;">${sub} - ${cat}</h2>`; z.appendChild(currentPage);
+            notes.forEach((n, idx) => {
+                let box = document.createElement('div'); box.style.marginBottom = '20px';
+                box.innerHTML = `<div><b>Q${idx+1}: ${n.q}</b></div><div class="dotted-line"></div><div class="dotted-line"></div>`; currentPage.appendChild(box);
+                if (currentPage.scrollHeight > 1122) { currentPage.removeChild(box); currentPage = document.createElement('div'); currentPage.className = 'pdf-page'; currentPage.innerHTML = `<div style="margin-bottom:20px; font-size:10px; color:#999;">${sub} - ${cat} (Cont...)</div>`; z.appendChild(currentPage); currentPage.appendChild(box); }
+            });
+            await new Promise(r => setTimeout(r, 1000));
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'pt', 'a4'); let pgs = z.querySelectorAll('.pdf-page');
+            for (let i = 0; i < pgs.length; i++) { let c = await html2canvas(pgs[i], { scale: 2 }); if (i > 0) doc.addPage(); doc.addImage(c.toDataURL('image/jpeg', 0.9), 'JPG', 0, 0, 595, (c.height * 595) / c.width); }
+            doc.save(`${sub}_${cat}.pdf`); z.innerHTML = ''; z.style.zIndex = '-999'; document.getElementById('loading').style.display = 'none';
+        }
+
+        function saveRoutine() { let ctx = getData(); let d = document.getElementById('r-day').value; let t = document.getElementById('r-time').value; let k = document.getElementById('r-task').value; let editId = document.getElementById('r-edit-id').value; if(!t || !k) return alert("Time and Task required!"); if(!ctx.routine) ctx.routine = {}; if(!ctx.routine[d]) ctx.routine[d] = []; if(editId) { let task = ctx.routine[d].find(r => r.id == editId); if(task) { task.time = t; task.task = k; } } else { ctx.routine[d].push({ id: Date.now(), time: t, task: k, done: false }); } ctx.routine[d].sort((a,b) => a.time.localeCompare(b.time)); document.getElementById('r-task').value = ''; document.getElementById('r-edit-id').value = ''; document.getElementById('r-save-btn').innerText = "Add to Routine"; document.getElementById('routine-form-title').innerText = "Add New Task"; document.getElementById('r-cancel-btn').classList.add('hidden'); saveData(); renderRoutine(); if(currentStudentId) renderStudentUpcomingTasks(app.students.find(s=>s.id===currentStudentId)); }
+        function editRoutineTask(day, id) { let ctx = getData(); let task = ctx.routine[day].find(r => r.id == id); if(task) { document.getElementById('r-day').value = day; document.getElementById('r-time').value = task.time; document.getElementById('r-task').value = task.task; document.getElementById('r-edit-id').value = task.id; document.getElementById('r-save-btn').innerText = "Update Task"; document.getElementById('routine-form-title').innerText = "Edit Task"; document.getElementById('r-cancel-btn').classList.remove('hidden'); document.querySelector('.tab-content.active').scrollTop = 0; } }
+        function cancelRoutineEdit() { document.getElementById('r-task').value = ''; document.getElementById('r-edit-id').value = ''; document.getElementById('r-save-btn').innerText = "Add to Routine"; document.getElementById('routine-form-title').innerText = "Add New Task"; document.getElementById('r-cancel-btn').classList.add('hidden'); }
+        function delRoutine(d, id) { if(confirm("Delete this task?")) { let ctx = getData(); ctx.routine[d] = ctx.routine[d].filter(x => x.id !== id); saveData(); renderRoutine(); } }
+        function renderRoutine() { let ctx = getData(); let l = document.getElementById('routine-list'); l.innerHTML = ''; days.forEach(d => { if(ctx.routine && ctx.routine[d] && ctx.routine[d].length) { let h = `<div class="card" style="padding:10px;"><b>${d}</b>`; ctx.routine[d].forEach(r => { h += `<div class="routine-item"><span><b>${r.time}</b> - ${r.task}</span><div class="routine-actions"><button class="edit-btn" onclick="editRoutineTask('${d}', ${r.id})">✎</button><button class="del-btn" onclick="delRoutine('${d}', ${r.id})">✖</button></div></div>`; }); l.innerHTML += h + '</div>'; } }); }
+        function renderStudentUpcomingTasks(st) { let list = document.getElementById('student-upcoming-tasks'); list.innerHTML = ''; let dName = days[new Date().getDay()]; let tasks = (st.data.routine && st.data.routine[dName]) ? st.data.routine[dName] : []; if(tasks.length === 0) { list.innerHTML = '<p style="text-align:center; color:#999;">No tasks today.</p>'; return; } tasks.forEach(r => { let status = r.done ? '<span style="color:green; font-weight:bold;">✔ Done</span>' : '<span style="color:#d35400;">⏳ Pending</span>'; list.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;"><div><b>${r.time}</b> ${r.task}</div><div>${status}</div></div>`; }); }
+        
+        // --- UPDATED SMART ALARMS & RECOVERY LOGIC ---
+        function checkSmartAlarms() {
+            let dName = days[new Date().getDay()];
+            let now = new Date();
+            let currentMins = now.getHours() * 60 + now.getMinutes();
+            let recoveryZone = document.getElementById('recovery-zone');
+            
+            // Determine Context: Student or Teacher
+            let routineContext = null;
+            if (currentStudentId) {
+                let st = app.students.find(s => s.id === currentStudentId);
+                if(st && st.data.routine) routineContext = st.data.routine[dName];
+            } else {
+                // Teacher Mode (Global Routine)
+                if(app.routine) routineContext = app.routine[dName];
+            }
+
+            // Clean previous alerts logic handled by reconstruction below
+            let alertsHtml = '';
+
+            if (routineContext) {
+                routineContext.forEach(r => {
+                    if (r.done) return;
+                    
+                    let [h, m] = r.time.split(':').map(Number);
+                    let taskMins = h * 60 + m;
+
+                    // 1. Alarm Audio (Voice Enabled only)
+                    if (voiceEnabled && currentMins === taskMins) {
+                        let alertKey = `${dName}-${r.id}-alarm-${currentStudentId||'g'}`;
+                        if (!sessionStorage.getItem(alertKey)) {
+                            window.speechSynthesis.speak(new SpeechSynthesisUtterance("Time for " + r.task));
+                            sessionStorage.setItem(alertKey, "true");
+                        }
+                    }
+
+                    // 2. Recovery Logic (If time has passed by > 0 mins)
+                    if (currentMins > taskMins) {
+                        alertsHtml += `
+                        <div class="recovery-alert">
+                            <div>
+                                <div style="font-size:16px;">⚠️ Missed: ${r.task}</div>
+                                <div style="font-size:12px; opacity:0.8;">Time was: ${r.time}</div>
+                            </div>
+                            <button class="main-btn" style="width:auto; padding:8px 15px; background:#c0392b; border:1px solid white;" onclick="recoverTask('${dName}', ${r.id})">Recover Now ↺</button>
+                        </div>`;
+                    }
+                });
+            }
+            
+            // Only update DOM if content changed to prevent flicker, or just simple replace
+            if(recoveryZone.innerHTML !== alertsHtml) {
+                recoveryZone.innerHTML = alertsHtml;
+            }
+        }
+
+        function recoverTask(day, id) {
+            let targetRoutineArray = null;
+            if (currentStudentId) {
+                let st = app.students.find(s => s.id === currentStudentId);
+                if(st && st.data.routine) targetRoutineArray = st.data.routine[day];
+            } else {
+                if(app.routine) targetRoutineArray = app.routine[day];
+            }
+
+            if(targetRoutineArray) {
+                let task = targetRoutineArray.find(r => r.id === id);
+                if(task) {
+                    task.done = true;
+                    saveData();
+                    updateDashboard();
+                    // Force refresh alarms to remove notification immediately
+                    checkSmartAlarms();
+                }
+            }
+        }
+
+        function markTaskDone(day, id) { let ctx = getData(); let task = ctx.routine[day].find(r => r.id === id); if(task) { task.done = true; saveData(); updateUIContext(); document.getElementById('notification-zone').innerHTML = ''; alert("Task Marked Completed!"); } }
+        function enableAudioSystem() { voiceEnabled=true; document.getElementById('alarm-status').innerText="ACTIVE"; document.getElementById('alarm-status').style.color="green"; window.speechSynthesis.speak(new SpeechSynthesisUtterance("System Active")); }
+    </script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js")
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.log("SW Error", err));
+  });
+}
+</script>
+</body>
+</html>
